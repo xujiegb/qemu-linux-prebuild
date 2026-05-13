@@ -1,0 +1,126 @@
+name: build QEMU Linux prebuild
+
+on:
+  workflow_dispatch:
+    inputs:
+      qemu_version:
+        description: "QEMU version, example: 10.2.2"
+        required: true
+        default: "10.2.2"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build qemu ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+            deb_arch: amd64
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            deb_arch: arm64
+
+    env:
+      QEMU_VERSION: ${{ inputs.qemu_version }}
+      PREFIX_DIR: qemu-linux-${{ matrix.arch }}
+
+    steps:
+      - name: Prepare tools
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ninja-build \
+            pkg-config \
+            python3 \
+            python3-venv \
+            python3-pip \
+            libglib2.0-dev \
+            libpixman-1-dev \
+            libslirp-dev \
+            libfdt-dev \
+            zlib1g-dev \
+            libaio-dev \
+            libcap-ng-dev \
+            libattr1-dev \
+            libseccomp-dev \
+            libusb-1.0-0-dev \
+            libzstd-dev \
+            wget \
+            curl \
+            ca-certificates \
+            xz-utils \
+            tar \
+            file
+
+      - name: Download QEMU source
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          wget -O "qemu-${QEMU_VERSION}.tar.xz" \
+            "https://download.qemu.org/qemu-${QEMU_VERSION}.tar.xz"
+
+          tar -xf "qemu-${QEMU_VERSION}.tar.xz"
+
+      - name: Build QEMU
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd "qemu-${QEMU_VERSION}"
+
+          ./configure \
+            --prefix="$GITHUB_WORKSPACE/${PREFIX_DIR}" \
+            --target-list=loongarch64-softmmu \
+            --enable-slirp \
+            --disable-werror
+
+          make -j"$(nproc)"
+          make install
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          "$GITHUB_WORKSPACE/${PREFIX_DIR}/bin/qemu-system-loongarch64" --version
+
+          tar -C "$GITHUB_WORKSPACE" \
+            -czf "qemu-${QEMU_VERSION}-linux-${{ matrix.arch }}.tar.gz" \
+            "${PREFIX_DIR}"
+
+          sha256sum "qemu-${QEMU_VERSION}-linux-${{ matrix.arch }}.tar.gz" \
+            > "qemu-${QEMU_VERSION}-linux-${{ matrix.arch }}.tar.gz.sha256"
+
+          ls -lh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}
+          path: |
+            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz
+            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz.sha256
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: qemu-${{ env.QEMU_VERSION }}
+          name: QEMU ${{ env.QEMU_VERSION }}
+          files: |
+            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz
+            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz.sha256
+          prerelease: false
+          make_latest: true
