@@ -6,7 +6,6 @@ on:
       qemu_version:
         description: "QEMU version, example: 10.2.2"
         required: true
-        default: "10.2.2"
         type: string
 
 permissions:
@@ -23,10 +22,9 @@ jobs:
         include:
           - arch: x64
             runner: ubuntu-24.04
-            deb_arch: amd64
+
           - arch: arm64
             runner: ubuntu-24.04-arm
-            deb_arch: arm64
 
     env:
       QEMU_VERSION: ${{ inputs.qemu_version }}
@@ -39,6 +37,7 @@ jobs:
           set -euo pipefail
 
           sudo apt-get update
+
           sudo apt-get install -y \
             build-essential \
             ninja-build \
@@ -98,29 +97,29 @@ jobs:
           "$GITHUB_WORKSPACE/${PREFIX_DIR}/bin/qemu-system-loongarch64" --version
 
           tar -C "$GITHUB_WORKSPACE" \
-            -czf "qemu-${QEMU_VERSION}-linux-${{ matrix.arch }}.tar.gz" \
+            -czf "qemu-linux-${{ matrix.arch }}.tar.gz" \
             "${PREFIX_DIR}"
 
-          sha256sum "qemu-${QEMU_VERSION}-linux-${{ matrix.arch }}.tar.gz" \
-            > "qemu-${QEMU_VERSION}-linux-${{ matrix.arch }}.tar.gz.sha256"
+          sha256sum "qemu-linux-${{ matrix.arch }}.tar.gz" \
+            > "qemu-linux-${{ matrix.arch }}.tar.gz.sha256"
 
           ls -lh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}
+          name: qemu-linux-${{ matrix.arch }}
           path: |
-            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz
-            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz.sha256
+            qemu-linux-${{ matrix.arch }}.tar.gz
+            qemu-linux-${{ matrix.arch }}.tar.gz.sha256
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: qemu-${{ env.QEMU_VERSION }}
-          name: QEMU ${{ env.QEMU_VERSION }}
+          tag_name: ${{ env.QEMU_VERSION }}
+          name: ${{ env.QEMU_VERSION }}
           files: |
-            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz
-            qemu-${{ env.QEMU_VERSION }}-linux-${{ matrix.arch }}.tar.gz.sha256
+            qemu-linux-${{ matrix.arch }}.tar.gz
+            qemu-linux-${{ matrix.arch }}.tar.gz.sha256
           prerelease: false
           make_latest: true
