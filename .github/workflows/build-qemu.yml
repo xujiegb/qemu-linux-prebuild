@@ -22,19 +22,19 @@ jobs:
         include:
           - arch: x64
             runner: ubuntu-24.04
-            cflags: "-O2 -pipe -march=x86-64 -mtune=generic"
+            cflags: "-O2 -pipe -march=x86-64 -mtune=generic -fno-plt"
 
           - arch: x64-v2
             runner: ubuntu-24.04
-            cflags: "-O2 -pipe -march=x86-64-v2 -mtune=generic"
+            cflags: "-O2 -pipe -march=x86-64-v2 -mtune=generic -fno-plt"
 
           - arch: x64-v3
             runner: ubuntu-24.04
-            cflags: "-O2 -pipe -march=x86-64-v3 -mtune=generic"
+            cflags: "-O2 -pipe -march=x86-64-v3 -mtune=generic -fno-plt"
 
           - arch: arm64
             runner: ubuntu-24.04-arm
-            cflags: "-O2 -pipe"
+            cflags: "-O2 -pipe -fno-plt"
 
     env:
       QEMU_VERSION: ${{ inputs.qemu_version }}
