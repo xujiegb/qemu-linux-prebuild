@@ -58,7 +58,7 @@ jobs:
             libglib2.0-dev \
             libpixman-1-dev \
             libslirp-dev \
-            libfdt-lib \
+            libfdt-dev \
             zlib1g-dev \
             libaio-dev \
             libcap-ng-dev \
