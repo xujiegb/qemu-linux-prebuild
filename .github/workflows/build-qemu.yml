@@ -88,8 +88,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          export CFLAGS="${{ matrix.cflags }}"
-          export CXXFLAGS="${{ matrix.cflags }}"
+          export CFLAGS="${{ matrix.cflags }} -fuse-linker-plugin"
+          export CXXFLAGS="${{ matrix.cflags }} -fuse-linker-plugin"
           export LDFLAGS="-Wl,-O1 -Wl,--as-needed"
 
           echo "CFLAGS=${CFLAGS}"
