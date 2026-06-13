@@ -117,6 +117,7 @@ jobs:
             --prefix="$GITHUB_WORKSPACE/${PREFIX_DIR}" \
             --target-list=loongarch64-softmmu \
             --enable-slirp \
+            --enable-lto \
             --disable-werror
 
           make -j"$(nproc)"
