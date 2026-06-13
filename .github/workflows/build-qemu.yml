@@ -88,8 +88,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          export CFLAGS="${{ matrix.cflags }} -fuse-linker-plugin -fomit-frame-pointer -fvisibility=hidden -falign-functions=32 -falign-loops=32 -flto=auto"
-          export CXXFLAGS="${{ matrix.cflags }} -fuse-linker-plugin -fomit-frame-pointer -fvisibility=hidden -falign-functions=32 -falign-loops=32 -flto=auto"
+          export CFLAGS="${{ matrix.cflags }} -flto=auto -fno-plt -fno-semantic-interposition"
+          export CXXFLAGS="${{ matrix.cflags }} -flto=auto -fno-plt -fno-semantic-interposition"
           export LDFLAGS="-Wl,-O1 -Wl,--as-needed"
 
           echo "CFLAGS=${CFLAGS}"
