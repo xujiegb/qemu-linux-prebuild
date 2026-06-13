@@ -22,19 +22,19 @@ jobs:
         include:
           - arch: x64
             runner: ubuntu-24.04
-            cflags: "-O2 -pipe -march=x86-64 -mtune=generic -fno-plt"
+            cflags: "-O2 -pipe -march=x86-64 -mtune=generic -fno-plt -fno-semantic-interposition"
 
           - arch: x64-v2
             runner: ubuntu-24.04
-            cflags: "-O2 -pipe -march=x86-64-v2 -mtune=generic -fno-plt"
+            cflags: "-O2 -pipe -march=x86-64-v2 -mtune=generic -fno-plt -fno-semantic-interposition"
 
           - arch: x64-v3
             runner: ubuntu-24.04
-            cflags: "-O2 -pipe -march=x86-64-v3 -mtune=generic -fno-plt"
+            cflags: "-O2 -pipe -march=x86-64-v3 -mtune=generic -fno-plt -fno-semantic-interposition"
 
           - arch: arm64
             runner: ubuntu-24.04-arm
-            cflags: "-O2 -pipe -fno-plt"
+            cflags: "-O2 -pipe -fno-plt -fno-semantic-interposition"
 
     env:
       QEMU_VERSION: ${{ inputs.qemu_version }}
@@ -90,9 +90,11 @@ jobs:
 
           export CFLAGS="${{ matrix.cflags }}"
           export CXXFLAGS="${{ matrix.cflags }}"
+          export LDFLAGS="-Wl,-O1 -Wl,--as-needed"
 
           echo "CFLAGS=${CFLAGS}"
           echo "CXXFLAGS=${CXXFLAGS}"
+          echo "LDFLAGS=${LDFLAGS}"
 
           gcc -dM -E ${CFLAGS} - < /dev/null | sort > gcc-macros.txt
 
