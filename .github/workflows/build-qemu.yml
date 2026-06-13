@@ -22,9 +22,19 @@ jobs:
         include:
           - arch: x64
             runner: ubuntu-24.04
+            cflags: "-O2 -pipe -march=x86-64 -mtune=generic"
+
+          - arch: x64-v2
+            runner: ubuntu-24.04
+            cflags: "-O2 -pipe -march=x86-64-v2 -mtune=generic"
+
+          - arch: x64-v3
+            runner: ubuntu-24.04
+            cflags: "-O2 -pipe -march=x86-64-v3 -mtune=generic"
 
           - arch: arm64
             runner: ubuntu-24.04-arm
+            cflags: "-O2 -pipe"
 
     env:
       QEMU_VERSION: ${{ inputs.qemu_version }}
@@ -77,6 +87,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          export CFLAGS="${{ matrix.cflags }}"
+          export CXXFLAGS="${{ matrix.cflags }}"
+
+          echo "CFLAGS=${CFLAGS}"
+          echo "CXXFLAGS=${CXXFLAGS}"
+
+          gcc -dM -E ${CFLAGS} - < /dev/null | sort > gcc-macros.txt
+
+          if [[ "${{ matrix.arch }}" == "x64-v2" ]]; then
+            grep -q "__SSE4_2__" gcc-macros.txt
+            grep -q "__POPCNT__" gcc-macros.txt
+            echo "Verified: x86-64-v2 compiler flags are active"
+          fi
+
+          if [[ "${{ matrix.arch }}" == "x64-v3" ]]; then
+            grep -q "__AVX2__" gcc-macros.txt
+            grep -q "__FMA__" gcc-macros.txt
+            grep -q "__BMI2__" gcc-macros.txt
+            echo "Verified: x86-64-v3 compiler flags are active"
+          fi
 
           cd "qemu-${QEMU_VERSION}"
 
